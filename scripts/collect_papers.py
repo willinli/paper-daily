@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import datetime as dt
 import email.utils
 import html
@@ -318,7 +319,8 @@ def call_openai_compatible(prompt: str) -> dict[str, Any]:
     endpoint = base_url.rstrip("/") + "/chat/completions"
     payload = {
         "model": model,
-        "temperature": 0.2,
+        "temperature": float(os.getenv("LLM_TEMPERATURE", "0.2")),
+        "max_tokens": int(os.getenv("LLM_MAX_TOKENS", "700")),
         "response_format": {"type": "json_object"},
         "messages": [
             {
@@ -342,16 +344,14 @@ def call_openai_compatible(prompt: str) -> dict[str, Any]:
 
 def build_llm_prompt(topic: Topic, paper: dict[str, Any], base_match: dict[str, Any]) -> str:
     return f"""
-请根据论文标题、摘要、分类和我的研究方向，输出精确中文分析。不要夸大摘要中没有的信息；如果证据不足，请明确说明。
+请只基于论文标题、摘要、分类和我的研究方向，输出简洁中文分析。不要阅读全文式扩写，不要夸大摘要中没有的信息；如果证据不足，请明确说明。
 
 我的研究方向：
 名称：{topic.name}
-描述：{topic.description}
 关键词：{", ".join(topic.keywords)}
 
 论文信息：
 标题：{paper.get("title", "")}
-作者：{", ".join(paper.get("authors", [])[:8])}
 arXiv 分类：{", ".join(paper.get("categories", []))}
 摘要：{paper.get("summary", "")}
 
@@ -362,12 +362,12 @@ arXiv 分类：{", ".join(paper.get("categories", []))}
 
 请输出 JSON，字段必须为：
 {{
-  "problem": "论文要解决的问题，中文，1-2句",
-  "method": "核心方法，中文，1-2句",
-  "innovation": "相对已有工作的具体创新点，中文，2-3点合并成一段",
-  "evidence": "摘要中可核验的实验、理论或系统证据；没有则写证据不足",
-  "limitations": "可能局限或需要阅读全文确认的点",
-  "why_relevant": "为什么匹配我的研究方向",
+  "problem": "论文要解决的问题，中文，1句，不超过60字",
+  "method": "核心方法，中文，1句，不超过80字",
+  "innovation": "摘要体现的具体创新点，中文，1-2句，不超过120字",
+  "evidence": "摘要中可核验的实验、理论或系统证据；没有则写证据不足，不超过80字",
+  "limitations": "可能局限或需要阅读全文确认的点，不超过80字",
+  "why_relevant": "为什么匹配我的研究方向，不超过80字",
   "match_score_adjustment": 0.0,
   "match_level": "high|medium|low"
 }}
@@ -403,6 +403,13 @@ def summarize_with_llm(topic: Topic, paper: dict[str, Any], base_match: dict[str
     adjusted_match["level"] = adjusted_level
     adjusted_match["llm_reason"] = summary["why_relevant"]
     return summary, adjusted_match
+
+
+def summarize_one(args: tuple[Topic, dict[str, Any]]) -> tuple[str, dict[str, str], dict[str, Any]]:
+    topic, paper = args
+    paper_id = str(paper.get("id", ""))
+    summary, adjusted_match = summarize_with_llm(topic, paper, paper["best_match"])
+    return paper_id, summary, adjusted_match
 
 
 def dedupe_papers(papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -473,19 +480,33 @@ def collect(config_path: Path, output_path: Path, days: int, max_per_topic: int,
     if not recent_papers:
         print("No matched papers found, so the LLM will not be called.", flush=True)
 
-    summarized = 0
-    for paper in recent_papers:
+    summaries_by_id: dict[str, tuple[dict[str, str], dict[str, Any]]] = {}
+    llm_jobs = []
+    for paper in recent_papers[:max_summaries]:
         best_topic = next(topic for topic in topics if topic.id == paper["best_match"]["topic_id"])
-        if summarized < max_summaries:
-            if llm_enabled():
-                print(f"Summarizing with {llm_provider_label()}: {paper.get('id')}", flush=True)
-            summary, adjusted_match = summarize_with_llm(best_topic, paper, paper["best_match"])
+        llm_jobs.append((best_topic, paper))
+
+    if llm_enabled() and llm_jobs:
+        concurrency = max(1, int(os.getenv("LLM_CONCURRENCY", "4")))
+        print(f"Summarizing {len(llm_jobs)} papers with {llm_provider_label()} using concurrency={concurrency}", flush=True)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
+            futures = [executor.submit(summarize_one, job) for job in llm_jobs]
+            for future in concurrent.futures.as_completed(futures):
+                paper_id, summary, adjusted_match = future.result()
+                summaries_by_id[paper_id] = (summary, adjusted_match)
+                print(f"Finished summary: {paper_id}", flush=True)
+    else:
+        for topic, paper in llm_jobs:
+            summary, adjusted_match = summarize_with_llm(topic, paper, paper["best_match"])
+            summaries_by_id[str(paper.get("id", ""))] = (summary, adjusted_match)
+
+    for index, paper in enumerate(recent_papers):
+        paper_id = str(paper.get("id", ""))
+        if index < max_summaries and paper_id in summaries_by_id:
+            summary, adjusted_match = summaries_by_id[paper_id]
             paper["chinese_summary"] = summary
             paper["best_match"] = adjusted_match
             paper["matches"] = [adjusted_match if m["topic_id"] == adjusted_match["topic_id"] else m for m in paper["matches"]]
-            summarized += 1
-            if llm_enabled():
-                time.sleep(1)
         else:
             paper["chinese_summary"] = fallback_summary(paper, paper["best_match"])
 
@@ -501,6 +522,8 @@ def collect(config_path: Path, output_path: Path, days: int, max_per_topic: int,
             "max_per_topic": max_per_topic,
             "llm_enabled": llm_enabled(),
             "llm_provider": llm_provider_label(),
+            "llm_concurrency": int(os.getenv("LLM_CONCURRENCY", "4")),
+            "llm_max_tokens": int(os.getenv("LLM_MAX_TOKENS", "700")),
             "successful_fetches": successful_fetches,
             "failed_fetches": failed_fetches,
         },
