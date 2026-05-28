@@ -1,7 +1,7 @@
 {
-  "generated_at": "Wed, 27 May 2026 08:05:43 +0000",
-  "generated_at_iso": "2026-05-27T08:05:43.734529+00:00",
-  "config_source": "file",
+  "generated_at": "Thu, 28 May 2026 09:35:48 +0000",
+  "generated_at_iso": "2026-05-28T09:35:48.728882+00:00",
+  "config_source": "issue",
   "topics": [
     {
       "id": "llm_low_precision_quantization",
@@ -97,11 +97,194 @@
       ]
     }
   ],
-  "papers": [],
+  "papers": [
+    {
+      "id": "2605.28803v1",
+      "source": "arXiv",
+      "title": "Ω-QVLA: Robust Quantization for Vision-Language-Action Models via Composite Rotation and Per-step Scaling",
+      "authors": [
+        "Xinyu Wang",
+        "Mingze Li",
+        "Sicheng Lyu",
+        "Dongxiu Liu",
+        "Kaicheng Yang",
+        "Ziyu Zhao",
+        "Yufei Cui",
+        "Xiao-Wen Chang",
+        "Peng Lu"
+      ],
+      "summary": "Vision-Language-Action (VLA) models unify perception, reasoning, and control within a single policy, yet their multi-billion-parameter backbones and diffusion-based action heads make on-device deployment prohibitively expensive. Prior quantization efforts offer only partial solutions, compressing the LLM backbone while leaving the DiT action head at full precision, or resorting to mixed-precision schemes, driven by the belief that uniformly quantizing the action head is inherently unstable. We challenge this assumption with Omega-QVLA, the first training-free post-training quantization framework that compresses both the language backbone and the entire diffusion action head of a VLA model to a uniform W4A4 precision, eliminating the need for mixed-precision allocation. Omega-QVLA combines a composite SVD-Hadamard rotation that equalizes per-channel weight energy while diffusing residual activation outliers with per-step DiT activation scaling quantization that absorbs dynamic-range drift across denoising steps. On LIBERO, Omega-QVLA compresses Pi 0.5 and GR00T N1.5 to W4A4 with 98.0% and 87.8% task success rates, matching or exceeding their FP16 references of 97.1% and 87.0%, while reducing the static memory footprint by 71.3%. Real-world manipulation experiments further confirm smooth, accurate manipulation where prior methods fail. Code is available at https://github.com/UCMP13753/Omega-QVLA.",
+      "published": "2026-05-27T17:55:01Z",
+      "updated": "2026-05-27T17:55:01Z",
+      "paper_url": "http://arxiv.org/abs/2605.28803v1",
+      "pdf_url": "https://arxiv.org/pdf/2605.28803v1",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "seed_topic": "llm_low_precision_quantization",
+      "matches": [
+        {
+          "topic_id": "llm_low_precision_quantization",
+          "topic_name": "大模型低精度量化",
+          "score": 0.553,
+          "level": "medium",
+          "reason": "关键词命中：post-training quantization；arXiv 分类重合：cs.LG",
+          "keyword_hits": [
+            "post-training quantization"
+          ],
+          "llm_reason": "论文聚焦后训练量化、统一低比特（W4A4）量化，涉及权重量化与激活量化，与大模型低精度量化研究方向高度吻合，可为大语言模型的全精度压缩提供新思路，尤其适配研究方向中关注的后训练量化与混合精度替代方案。"
+        },
+        {
+          "topic_id": "tensor_compute_unit_architecture",
+          "topic_name": "张量计算单元结构",
+          "score": 0.156,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": []
+        },
+        {
+          "topic_id": "kvcache_compression_storage_scheduling",
+          "topic_name": "KV cache 压缩与存储调度",
+          "score": 0.125,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": []
+        },
+        {
+          "topic_id": "llm_inference_cluster_communication",
+          "topic_name": "大模型推理集群通信优化",
+          "score": 0.094,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": []
+        }
+      ],
+      "best_match": {
+        "topic_id": "llm_low_precision_quantization",
+        "topic_name": "大模型低精度量化",
+        "score": 0.553,
+        "level": "medium",
+        "reason": "关键词命中：post-training quantization；arXiv 分类重合：cs.LG",
+        "keyword_hits": [
+          "post-training quantization"
+        ],
+        "llm_reason": "论文聚焦后训练量化、统一低比特（W4A4）量化，涉及权重量化与激活量化，与大模型低精度量化研究方向高度吻合，可为大语言模型的全精度压缩提供新思路，尤其适配研究方向中关注的后训练量化与混合精度替代方案。"
+      },
+      "chinese_summary": {
+        "problem": "VLA模型因数十亿参数骨干和扩散动作头导致端侧部署成本过高，现有量化方案无法稳定压缩整个模型，尤其难以统一量化扩散动作头。",
+        "method": "Omega-QVLA提出首个训练自由的后训练量化框架，通过复合SVD-Hadamard旋转均衡每通道权重能量并扩散激活异常值，结合每步DiT激活缩放量化吸收去噪动态范围漂移，将语言骨干和扩散动作头统一压缩至W4A4精度。",
+        "innovation": "首次突破VLA模型统一W4A4量化的稳定性难题，无需混合精度分配；设计复合旋转同时处理权重通道能量不均衡与激活异常值；提出每步DiT激活缩放量化适应扩散过程动态变化，取代传统固定缩放。",
+        "evidence": "在LIBERO基准上，Omega-QVLA压缩Pi 0.5与GR00T N1.5至W4A4后任务成功率分别达98.0%和87.8%，匹配甚至超过FP16基线（97.1%和87.0%），同时静态内存占用减少71.3%；真实世界操控实验验证了方法的有效性，先前方法失败。",
+        "limitations": "仅验证了两个VLA模型，泛化到其他架构或纯LLM任务尚不明确；扩散动作头量化高度依赖去噪步数特性，可能不适用于非扩散结构；未提及对KV cache等组件的量化支持。",
+        "why_relevant": "论文聚焦后训练量化、统一低比特（W4A4）量化，涉及权重量化与激活量化，与大模型低精度量化研究方向高度吻合，可为大语言模型的全精度压缩提供新思路，尤其适配研究方向中关注的后训练量化与混合精度替代方案。"
+      },
+      "first_seen_at": "2026-05-28T09:35:48.728882+00:00",
+      "last_seen_at": "2026-05-28T09:35:48.728882+00:00",
+      "retained_from_previous_run": false
+    },
+    {
+      "id": "2605.28488v1",
+      "source": "arXiv",
+      "title": "Bridging Maximum Likelihood and Optimal Transport for Efficient Inference and Model Selection in Stochastic Block Models",
+      "authors": [
+        "Simon Queric",
+        "Cédric Vincent-Cuaz",
+        "Charles Bouveyron",
+        "Marco Corneli"
+      ],
+      "summary": "We study inference in stochastic block models (SBMs) through the lens of optimal transport (OT). We first establish that maximum likelihood variational inference (MLVI) can be interpreted as a semi-relaxed Gromov-Wasserstein (srGW) projection with entropic regularization. While this formulation yields accurate clustering, the entropic regularization prevents transport plans to be sparse, hindering intrinsic model selection. Consequently, we investigate unregularized srGW estimators, and prove that they consistently recover both the SBM connectivity matrix and latent cluster assignments in the asymptotic regime. However, this asymptotic property does not translate into reliable model selection in finite samples, and calls for additional mechanisms to promote sparsity in the inferred cluster proportions. We empirically show that such a regularized formulation yields estimators that simultaneously recover model parameters and select the number of clusters in a single optimization problem, thereby avoiding costly grid search or heuristic model selection procedures.",
+      "published": "2026-05-27T13:44:43Z",
+      "updated": "2026-05-27T13:44:43Z",
+      "paper_url": "http://arxiv.org/abs/2605.28488v1",
+      "pdf_url": "https://arxiv.org/pdf/2605.28488v1",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "math.ST"
+      ],
+      "seed_topic": "llm_inference_cluster_communication",
+      "matches": [
+        {
+          "topic_id": "llm_inference_cluster_communication",
+          "topic_name": "大模型推理集群通信优化",
+          "score": 0.125,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": [],
+          "llm_reason": "论文主题属于统计网络模型的推断与模型选择，涉及最优传输理论，与“大模型推理集群通信优化”研究方向（关注分布式推理、并行策略、通信调度与系统吞吐）无内容相关性，唯一交集是都涉及机器学习（arXiv分类cs.LG），因此匹配度极低。"
+        },
+        {
+          "topic_id": "llm_low_precision_quantization",
+          "topic_name": "大模型低精度量化",
+          "score": 0.094,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": []
+        },
+        {
+          "topic_id": "tensor_compute_unit_architecture",
+          "topic_name": "张量计算单元结构",
+          "score": 0.094,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": []
+        },
+        {
+          "topic_id": "kvcache_compression_storage_scheduling",
+          "topic_name": "KV cache 压缩与存储调度",
+          "score": 0.094,
+          "level": "low",
+          "reason": "arXiv 分类重合：cs.LG",
+          "keyword_hits": []
+        }
+      ],
+      "best_match": {
+        "topic_id": "llm_inference_cluster_communication",
+        "topic_name": "大模型推理集群通信优化",
+        "score": 0.125,
+        "level": "low",
+        "reason": "arXiv 分类重合：cs.LG",
+        "keyword_hits": [],
+        "llm_reason": "论文主题属于统计网络模型的推断与模型选择，涉及最优传输理论，与“大模型推理集群通信优化”研究方向（关注分布式推理、并行策略、通信调度与系统吞吐）无内容相关性，唯一交集是都涉及机器学习（arXiv分类cs.LG），因此匹配度极低。"
+      },
+      "chinese_summary": {
+        "problem": "论文旨在解决随机块模型（SBM）中的高效推断和模型选择问题，即如何同时准确估计模型参数和确定聚类数目。",
+        "method": "核心方法是将最大似然变分推断（MLVI）解释为熵正则化的半松弛Gromov-Wasserstein（srGW）投影，进而研究未正则化srGW估计量的理论性质，并提出正则化形式在单一优化问题中联合实现参数估计与模型选择。",
+        "innovation": "创新点包括：①建立了最大似然变分推断与最优传输中半松弛Gromov-Wasserstein投影的形式联系；②证明了未正则化srGW估计量在渐近状态下可一致恢复SBM的连接矩阵和聚类分配；③提出一种正则化策略，在有限样本条件下仍然能同时完成参数推断和聚类数目选择，避免了网格搜索或启发式模型选择步骤。",
+        "evidence": "摘要中提供了理论证明（未正则化srGW估计量的一致性）和实证展示（正则化方法在模拟实验中同时恢复参数并选择聚类数），但未给出具体数据集、实验设置或量化指标。",
+        "limitations": "仅聚焦于随机块模型，模型假设较简单；有限样本下正则化方法的普适性需进一步验证；未提及在大规模网络或复杂连接结构下的计算效率。",
+        "why_relevant": "论文主题属于统计网络模型的推断与模型选择，涉及最优传输理论，与“大模型推理集群通信优化”研究方向（关注分布式推理、并行策略、通信调度与系统吞吐）无内容相关性，唯一交集是都涉及机器学习（arXiv分类cs.LG），因此匹配度极低。"
+      },
+      "first_seen_at": "2026-05-28T09:35:48.728882+00:00",
+      "last_seen_at": "2026-05-28T09:35:48.728882+00:00",
+      "retained_from_previous_run": false
+    }
+  ],
   "stats": {
-    "paper_count": 0,
-    "days": 14,
-    "max_per_topic": 5,
-    "llm_enabled": false
+    "paper_count": 2,
+    "new_paper_count": 2,
+    "days": 1,
+    "collection_mode": "lookback",
+    "collection_cutoff_iso": "2026-05-27T09:35:48.728882+00:00",
+    "max_per_topic": 25,
+    "llm_enabled": true,
+    "llm_concurrency": 2,
+    "recent_history_days": 45,
+    "successful_fetches": 4,
+    "failed_fetches": 0,
+    "retained_paper_count": 0,
+    "retained_recent_low_count": 0,
+    "dropped_low_relevance_count": 0,
+    "max_stored_papers": 800,
+    "max_data_bytes": 8388608,
+    "data_bytes": 15764,
+    "storage_trimmed_count": 0,
+    "storage_trimmed_by_level": {
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "unknown": 0
+    }
   }
 }
