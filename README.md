@@ -8,6 +8,8 @@
 - 默认读取 `config/interests.json`。
 - 如果存在标题为 `Research Interests` 的 open issue，则优先读取 issue 中的 JSON 配置。
 - 生成结果写入 `web/data/papers.json`，并部署 `web/` 到 GitHub Pages。
+- 每次更新会合并上一轮数据，历史论文只保留匹配度 `high` 和 `medium` 的条目，`low` 不跨天保留。
+- 默认最多保存 300 篇论文或 5 MiB 数据；超过限制时会先删除 `low`，再按论文发布时间从旧到新删除。
 - 页面端只负责展示和筛选，不保存密钥，也不调用模型 API。
 
 ## 配置研究方向
@@ -41,6 +43,8 @@
 - `LLM_BASE_URL`，例如 `https://api.deepseek.com/v1`
 - `LLM_MODEL`，例如 `deepseek-chat`
 - `LLM_CONCURRENCY`，模型并发数，默认 `2`
+- `MAX_STORED_PAPERS`，最多保存论文数，默认 `300`，设为 `0` 表示不按数量裁剪
+- `MAX_DATA_BYTES`，`web/data/papers.json` 最大字节数，默认 `5242880`，设为 `0` 表示不按大小裁剪
 
 `LLM_BASE_URL` 和 `LLM_MODEL` 也可以放在 Secrets 中；workflow 会优先读取 Variables，未设置时读取 Secrets。
 

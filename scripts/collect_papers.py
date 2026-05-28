@@ -24,6 +24,9 @@ ARXIV_API_URL = "https://export.arxiv.org/api/query"
 ARXIV_NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 DEFAULT_CONFIG = Path("config/interests.json")
 DEFAULT_OUTPUT = Path("web/data/papers.json")
+RETAINED_MATCH_LEVELS = {"high", "medium"}
+DEFAULT_MAX_STORED_PAPERS = 300
+DEFAULT_MAX_DATA_BYTES = 5 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -45,6 +48,10 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
+
+
+def json_size_bytes(data: dict[str, Any]) -> int:
+    return len(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")) + 1
 
 
 def normalize_space(value: str) -> str:
@@ -213,6 +220,29 @@ def fetch_arxiv(topic: Topic, max_results: int) -> list[dict[str, Any]]:
 def days_old(iso_date: str, now: dt.datetime) -> int:
     parsed = dt.datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
     return (now.date() - parsed.date()).days
+
+
+def parse_datetime(value: str | None) -> dt.datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            parsed = email.utils.parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc)
+
+
+def paper_datetime(paper: dict[str, Any]) -> dt.datetime:
+    for field in ("published", "updated", "last_seen_at", "first_seen_at"):
+        parsed = parse_datetime(str(paper.get(field, "")))
+        if parsed:
+            return parsed
+    return dt.datetime.min.replace(tzinfo=dt.timezone.utc)
 
 
 def keyword_score(topic: Topic, paper: dict[str, Any]) -> tuple[float, list[str]]:
@@ -415,11 +445,130 @@ def dedupe_papers(papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return unique
 
 
-def collect(config_path: Path, output_path: Path, days: int, max_per_topic: int, max_summaries: int) -> dict[str, Any]:
+def paper_key(paper: dict[str, Any]) -> str:
+    return str(paper.get("id") or paper.get("paper_url") or "")
+
+
+def best_match_level(paper: dict[str, Any]) -> str:
+    return str((paper.get("best_match") or {}).get("level") or "low").lower()
+
+
+def load_existing_payload(output_path: Path) -> dict[str, Any]:
+    if not output_path.exists():
+        return {}
+    try:
+        return load_json(output_path)
+    except Exception as exc:
+        print(f"Warning: cannot read existing paper data, starting fresh: {exc}", file=sys.stderr)
+        return {}
+
+
+def merge_with_retained_papers(
+    current_papers: list[dict[str, Any]],
+    existing_payload: dict[str, Any],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    existing_papers = existing_payload.get("papers", []) if isinstance(existing_payload, dict) else []
+    existing_generated_at = str(existing_payload.get("generated_at_iso") or existing_payload.get("generated_at") or now.isoformat())
+    retained_by_key: dict[str, dict[str, Any]] = {}
+    dropped_low = 0
+    for paper in existing_papers:
+        if not isinstance(paper, dict):
+            continue
+        key = paper_key(paper)
+        if not key:
+            continue
+        if best_match_level(paper) in RETAINED_MATCH_LEVELS:
+            retained_by_key[key] = paper
+        else:
+            dropped_low += 1
+
+    merged = []
+    seen = set()
+    now_iso = now.isoformat()
+    for paper in current_papers:
+        key = paper_key(paper)
+        previous = retained_by_key.get(key)
+        if previous:
+            paper.setdefault("first_seen_at", previous.get("first_seen_at") or existing_generated_at)
+        else:
+            paper.setdefault("first_seen_at", now_iso)
+        paper["last_seen_at"] = now_iso
+        paper["retained_from_previous_run"] = False
+        merged.append(paper)
+        if key:
+            seen.add(key)
+
+    retained_count = 0
+    for key, paper in retained_by_key.items():
+        if key in seen:
+            continue
+        retained = dict(paper)
+        retained.setdefault("first_seen_at", existing_generated_at)
+        retained.setdefault("last_seen_at", existing_generated_at)
+        retained["retained_from_previous_run"] = True
+        merged.append(retained)
+        retained_count += 1
+
+    return dedupe_papers(merged), {
+        "retained_paper_count": retained_count,
+        "dropped_low_relevance_count": dropped_low,
+    }
+
+
+def deletion_sort_key(paper: dict[str, Any]) -> tuple[int, dt.datetime]:
+    level = best_match_level(paper)
+    relevance_priority = 0 if level == "low" else 1
+    return relevance_priority, paper_datetime(paper)
+
+
+def trim_papers_for_storage(
+    payload: dict[str, Any],
+    max_stored_papers: int,
+    max_data_bytes: int,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    papers = list(payload.get("papers", []))
+    removed_by_level = {"high": 0, "medium": 0, "low": 0, "unknown": 0}
+
+    def projected_size() -> int:
+        projected = dict(payload)
+        projected["papers"] = papers
+        return json_size_bytes(projected)
+
+    data_bytes = projected_size()
+    while papers and (
+        (max_stored_papers > 0 and len(papers) > max_stored_papers)
+        or (max_data_bytes > 0 and data_bytes > max_data_bytes)
+    ):
+        remove_index = min(range(len(papers)), key=lambda index: deletion_sort_key(papers[index]))
+        removed = papers.pop(remove_index)
+        level = best_match_level(removed)
+        removed_by_level[level if level in removed_by_level else "unknown"] += 1
+        data_bytes = projected_size()
+
+    return papers, {
+        "max_stored_papers": max_stored_papers,
+        "max_data_bytes": max_data_bytes,
+        "data_bytes": data_bytes,
+        "storage_trimmed_count": sum(removed_by_level.values()),
+        "storage_trimmed_by_level": removed_by_level,
+    }
+
+
+def collect(
+    config_path: Path,
+    output_path: Path,
+    days: int,
+    max_per_topic: int,
+    max_summaries: int,
+    max_stored_papers: int,
+    max_data_bytes: int,
+) -> dict[str, Any]:
     default_config = load_json(config_path)
     config = load_issue_config(default_config)
     topics = parse_topics(config)
     now = dt.datetime.now(dt.timezone.utc)
+    existing_payload = load_existing_payload(output_path)
     all_candidates = []
     successful_fetches = 0
     failed_fetches = 0
@@ -435,13 +584,30 @@ def collect(config_path: Path, output_path: Path, days: int, max_per_topic: int,
             failed_fetches += 1
             print(f"Warning: arXiv request failed for {topic.name}: {exc}", file=sys.stderr)
 
-    if failed_fetches == len(topics) and output_path.exists():
-        existing = load_json(output_path)
+    if failed_fetches == len(topics) and existing_payload:
+        existing = existing_payload
         if existing.get("papers"):
             print("All sources failed; preserving existing paper data.", file=sys.stderr)
+            retained_papers, retention_stats = merge_with_retained_papers([], existing_payload, now)
+            retained_papers.sort(key=lambda p: (p["best_match"]["score"], p.get("published", "")), reverse=True)
+            existing["papers"] = retained_papers
             existing["generated_at"] = email.utils.format_datetime(now)
             existing["generated_at_iso"] = now.isoformat()
-            existing.setdefault("stats", {})["last_error"] = "All arXiv requests failed."
+            existing_stats = existing.setdefault("stats", {})
+            existing_stats.update(
+                {
+                    "last_error": "All arXiv requests failed.",
+                    "successful_fetches": successful_fetches,
+                    "failed_fetches": failed_fetches,
+                    **retention_stats,
+                }
+            )
+            trimmed_papers, storage_stats = trim_papers_for_storage(existing, max_stored_papers, max_data_bytes)
+            trimmed_papers.sort(key=lambda p: (p["best_match"]["score"], p.get("published", "")), reverse=True)
+            existing["papers"] = trimmed_papers
+            existing_stats.update(storage_stats)
+            existing_stats["paper_count"] = len(trimmed_papers)
+            existing_stats["data_bytes"] = json_size_bytes(existing)
             write_json(output_path, existing)
             return existing
 
@@ -491,22 +657,33 @@ def collect(config_path: Path, output_path: Path, days: int, max_per_topic: int,
         else:
             paper["chinese_summary"] = fallback_summary(paper, paper["best_match"])
 
+    merged_papers, retention_stats = merge_with_retained_papers(recent_papers, existing_payload, now)
+    merged_papers.sort(key=lambda p: (p["best_match"]["score"], p.get("published", "")), reverse=True)
+
     payload = {
         "generated_at": email.utils.format_datetime(now),
         "generated_at_iso": now.isoformat(),
         "config_source": "issue" if config is not default_config else "file",
         "topics": [topic.__dict__ for topic in topics],
-        "papers": recent_papers,
+        "papers": merged_papers,
         "stats": {
-            "paper_count": len(recent_papers),
+            "paper_count": len(merged_papers),
+            "new_paper_count": len(recent_papers),
             "days": days,
             "max_per_topic": max_per_topic,
             "llm_enabled": llm_enabled(),
             "llm_concurrency": int(os.getenv("LLM_CONCURRENCY", "2")),
             "successful_fetches": successful_fetches,
             "failed_fetches": failed_fetches,
+            **retention_stats,
         },
     }
+    trimmed_papers, storage_stats = trim_papers_for_storage(payload, max_stored_papers, max_data_bytes)
+    trimmed_papers.sort(key=lambda p: (p["best_match"]["score"], p.get("published", "")), reverse=True)
+    payload["papers"] = trimmed_papers
+    payload["stats"].update(storage_stats)
+    payload["stats"]["paper_count"] = len(trimmed_papers)
+    payload["stats"]["data_bytes"] = json_size_bytes(payload)
     write_json(output_path, payload)
     return payload
 
@@ -518,8 +695,18 @@ def main() -> None:
     parser.add_argument("--days", type=int, default=int(os.getenv("LOOKBACK_DAYS", "7")))
     parser.add_argument("--max-per-topic", type=int, default=int(os.getenv("MAX_PER_TOPIC", "25")))
     parser.add_argument("--max-summaries", type=int, default=int(os.getenv("MAX_SUMMARIES", "40")))
+    parser.add_argument("--max-stored-papers", type=int, default=int(os.getenv("MAX_STORED_PAPERS", str(DEFAULT_MAX_STORED_PAPERS))))
+    parser.add_argument("--max-data-bytes", type=int, default=int(os.getenv("MAX_DATA_BYTES", str(DEFAULT_MAX_DATA_BYTES))))
     args = parser.parse_args()
-    payload = collect(args.config, args.output, args.days, args.max_per_topic, args.max_summaries)
+    payload = collect(
+        args.config,
+        args.output,
+        args.days,
+        args.max_per_topic,
+        args.max_summaries,
+        args.max_stored_papers,
+        args.max_data_bytes,
+    )
     print(f"Wrote {len(payload['papers'])} papers to {args.output}")
 
 
