@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Paper Daily</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260529-theme-ui" />
   </head>
   <body>
     <header class="topbar">
@@ -16,14 +16,20 @@
         </div>
       </div>
       <nav class="top-actions" aria-label="页面操作">
-        <label class="theme-picker">
-          <span>主题</span>
-          <select id="themeSelect" aria-label="选择网站背景主题">
-            <option value="dark">深色</option>
-            <option value="light">淡色</option>
-            <option value="eye">护眼</option>
-          </select>
-        </label>
+        <div class="theme-switcher" role="radiogroup" aria-label="选择网站背景主题">
+          <button class="theme-option" type="button" role="radio" aria-checked="true" data-theme-option="dark" title="深色主题">
+            <span class="theme-swatch dark-swatch"></span>
+            <span>深色</span>
+          </button>
+          <button class="theme-option" type="button" role="radio" aria-checked="false" data-theme-option="light" title="淡色主题">
+            <span class="theme-swatch light-swatch"></span>
+            <span>淡色</span>
+          </button>
+          <button class="theme-option" type="button" role="radio" aria-checked="false" data-theme-option="eye" title="护眼主题">
+            <span class="theme-swatch eye-swatch"></span>
+            <span>护眼</span>
+          </button>
+        </div>
         <a class="icon-link" href="https://github.com/Futuresxy/paper-daily/issues" target="_blank" rel="noreferrer" title="配置研究方向">⚙</a>
         <a class="icon-link" href="https://github.com/Futuresxy/paper-daily/actions" target="_blank" rel="noreferrer" title="查看更新任务">↻</a>
       </nav>
@@ -140,6 +146,6 @@
       </article>
     </template>
 
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260529-theme-ui"></script>
   </body>
 </html>

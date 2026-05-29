@@ -28,7 +28,7 @@ const nodes = {
   levelFilter: document.querySelector("#levelFilter"),
   dateFilter: document.querySelector("#dateFilter"),
   searchInput: document.querySelector("#searchInput"),
-  themeSelect: document.querySelector("#themeSelect"),
+  themeOptions: document.querySelectorAll("[data-theme-option]"),
   tabs: document.querySelectorAll(".tab"),
   template: document.querySelector("#paperTemplate"),
 };
@@ -45,7 +45,11 @@ function storedTheme() {
 function applyTheme(theme) {
   state.theme = THEMES.has(theme) ? theme : "dark";
   document.body.dataset.theme = state.theme;
-  if (nodes.themeSelect) nodes.themeSelect.value = state.theme;
+  for (const option of nodes.themeOptions) {
+    const active = option.dataset.themeOption === state.theme;
+    option.classList.toggle("active", active);
+    option.setAttribute("aria-checked", String(active));
+  }
   try {
     localStorage.setItem(THEME_STORAGE_KEY, state.theme);
   } catch {
@@ -294,9 +298,11 @@ function updateStats() {
 }
 
 function bindEvents() {
-  nodes.themeSelect.addEventListener("change", (event) => {
-    applyTheme(event.target.value);
-  });
+  for (const option of nodes.themeOptions) {
+    option.addEventListener("click", () => {
+      applyTheme(option.dataset.themeOption);
+    });
+  }
   nodes.searchInput.addEventListener("input", (event) => {
     state.filters.query = event.target.value.trim();
     render();

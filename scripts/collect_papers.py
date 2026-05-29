@@ -28,6 +28,7 @@ RETAINED_MATCH_LEVELS = {"high", "medium"}
 DEFAULT_MAX_STORED_PAPERS = 800
 DEFAULT_MAX_DATA_BYTES = 8 * 1024 * 1024
 DEFAULT_RECENT_HISTORY_DAYS = 45
+TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 
 
 @dataclass(frozen=True)
@@ -150,6 +151,22 @@ def arxiv_query_for_topic(topic: Topic) -> str:
     return " AND ".join(parts) if parts else f'all:"{topic.name}"'
 
 
+def arxiv_retry_wait_seconds(exc: Exception, attempt: int) -> float:
+    if isinstance(exc, urllib.error.HTTPError):
+        retry_after = exc.headers.get("Retry-After")
+        if retry_after and retry_after.isdigit():
+            return float(retry_after)
+    base = float(os.getenv("ARXIV_RETRY_BASE_SECONDS", "45"))
+    cap = float(os.getenv("ARXIV_RETRY_MAX_SECONDS", "180"))
+    return min(cap, base * (2**attempt))
+
+
+def is_retryable_arxiv_error(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in TRANSIENT_HTTP_CODES
+    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
+
+
 def fetch_arxiv(topic: Topic, max_results: int) -> list[dict[str, Any]]:
     params = {
         "search_query": arxiv_query_for_topic(topic),
@@ -159,21 +176,24 @@ def fetch_arxiv(topic: Topic, max_results: int) -> list[dict[str, Any]]:
         "sortOrder": "descending",
     }
     url = f"{ARXIV_API_URL}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"User-Agent": "paper-daily-collector/1.0"})
-    retry_count = int(os.getenv("ARXIV_RETRIES", "3"))
+    retry_count = int(os.getenv("ARXIV_RETRIES", "4"))
+    timeout_seconds = float(os.getenv("ARXIV_TIMEOUT_SECONDS", "90"))
     last_error: Exception | None = None
     for attempt in range(retry_count):
+        req = urllib.request.Request(url, headers={"User-Agent": "paper-daily-collector/1.0 (+https://github.com/Futuresxy/paper-daily)"})
         try:
-            with urllib.request.urlopen(req, timeout=45) as resp:
+            with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
                 xml_data = resp.read()
             break
-        except urllib.error.HTTPError as exc:
+        except Exception as exc:
             last_error = exc
-            if exc.code != 429 or attempt == retry_count - 1:
+            if not is_retryable_arxiv_error(exc) or attempt == retry_count - 1:
                 raise
-            retry_after = exc.headers.get("Retry-After")
-            wait_seconds = int(retry_after) if retry_after and retry_after.isdigit() else 20 * (attempt + 1)
-            print(f"arXiv rate limited {topic.name}, retrying in {wait_seconds}s", flush=True)
+            wait_seconds = arxiv_retry_wait_seconds(exc, attempt)
+            if isinstance(exc, urllib.error.HTTPError) and exc.code == 429:
+                print(f"arXiv rate limited {topic.name}, retrying in {wait_seconds:.0f}s", flush=True)
+            else:
+                print(f"arXiv temporary error for {topic.name}: {exc}; retrying in {wait_seconds:.0f}s", flush=True)
             time.sleep(wait_seconds)
     else:
         raise RuntimeError(f"arXiv request failed: {last_error}")
@@ -606,7 +626,7 @@ def collect(
     failed_fetches = 0
     for index, topic in enumerate(topics):
         if index:
-            time.sleep(float(os.getenv("ARXIV_DELAY_SECONDS", "6")))
+            time.sleep(float(os.getenv("ARXIV_DELAY_SECONDS", "15")))
         print(f"Fetching arXiv papers for topic: {topic.name}", flush=True)
         try:
             topic_papers = fetch_arxiv(topic, max_per_topic)

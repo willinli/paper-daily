@@ -1,7 +1,15 @@
 import datetime as dt
+import os
+import urllib.error
 import unittest
 
-from scripts.collect_papers import collection_cutoff, merge_with_retained_papers, trim_papers_for_storage
+from scripts.collect_papers import (
+    arxiv_retry_wait_seconds,
+    collection_cutoff,
+    is_retryable_arxiv_error,
+    merge_with_retained_papers,
+    trim_papers_for_storage,
+)
 
 
 def paper(paper_id: str, level: str, published: str) -> dict:
@@ -22,6 +30,36 @@ def paper(paper_id: str, level: str, published: str) -> dict:
 
 
 class RetentionTest(unittest.TestCase):
+    def tearDown(self) -> None:
+        os.environ.pop("ARXIV_RETRY_BASE_SECONDS", None)
+        os.environ.pop("ARXIV_RETRY_MAX_SECONDS", None)
+
+    def test_arxiv_retry_wait_uses_retry_after_header(self) -> None:
+        error = urllib.error.HTTPError(
+            "https://export.arxiv.org/api/query",
+            429,
+            "Too Many Requests",
+            {"Retry-After": "75"},
+            None,
+        )
+
+        self.assertEqual(arxiv_retry_wait_seconds(error, 0), 75.0)
+
+    def test_arxiv_retry_wait_uses_capped_backoff(self) -> None:
+        os.environ["ARXIV_RETRY_BASE_SECONDS"] = "10"
+        os.environ["ARXIV_RETRY_MAX_SECONDS"] = "25"
+
+        self.assertEqual(arxiv_retry_wait_seconds(TimeoutError("timed out"), 0), 10.0)
+        self.assertEqual(arxiv_retry_wait_seconds(TimeoutError("timed out"), 2), 25.0)
+
+    def test_arxiv_retryable_errors(self) -> None:
+        rate_limited = urllib.error.HTTPError("url", 429, "Too Many Requests", {}, None)
+        not_found = urllib.error.HTTPError("url", 404, "Not Found", {}, None)
+
+        self.assertTrue(is_retryable_arxiv_error(rate_limited))
+        self.assertTrue(is_retryable_arxiv_error(TimeoutError("timed out")))
+        self.assertFalse(is_retryable_arxiv_error(not_found))
+
     def test_merge_retains_previous_high_medium_and_recent_low(self) -> None:
         now = dt.datetime(2026, 5, 28, tzinfo=dt.timezone.utc)
         stale_low = paper("old-low", "low", "2026-03-01T00:00:00+00:00")
