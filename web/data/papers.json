@@ -1,6 +1,6 @@
 {
-  "generated_at": "Sat, 30 May 2026 05:36:39 +0000",
-  "generated_at_iso": "2026-05-30T05:36:39.370690+00:00",
+  "generated_at": "Sat, 30 May 2026 05:44:49 +0000",
+  "generated_at_iso": "2026-05-30T05:44:49.832810+00:00",
   "config_source": "issue",
   "topics": [
     {
@@ -2394,6 +2394,76 @@
       "first_seen_at": "2026-05-30T05:34:44.334184+00:00",
       "last_seen_at": "2026-05-30T05:34:44.334184+00:00",
       "retained_from_previous_run": true
+    },
+    {
+      "id": "crossref:10.32628/cseit251116279",
+      "source": "Crossref",
+      "title": "Cyber Defense Digital Twins: A Federated Learning and Zero-Trust AI Architecture for Autonomous Threat Prediction and Response",
+      "authors": [
+        "Sivaramakrishnan Narayanan"
+      ],
+      "summary": "Modern enterprise networks operate under persistent threats that exploit cloud-native misconfigurations, identity sprawl, and API vulnerabilities at machine speed. Existing security operations center (SOC) architectures remain largely reactive, signature-dependent, and incapable of predicting multi-stage lateral movement. This paper proposes the Cognitive Cyber Defense Digital Twin (CCDT), a unified architecture integrating federated learning (FL), graph neural network (GNN)-based attack-path forecasting, adversarially hardened detection models, and autonomous Security Orchestration, Automation, and Response (SOAR) with deception engineering. The CCDT constructs a continuously synchronized digital replica of organizational assets and employs reinforcement learning-based red agents to stress-test detection models. A federated intelligence mesh enables cross-organizational privacy-preserving gradient sharing. Experimental evaluations against CICIDS-2018 and LANL datasets demonstrate 52% faster attack-path detection, 41% reduction in false positive rate, and 60% reduction in mean-time-to-respond (MTTR) compared to traditional SOC baselines. Integrated Explainable AI (XAI) modules using SHAP values enable audit-ready compliance reporting. The CCDT represents a paradigm shift from reactive monitoring to predictive, autonomous, and privacy-preserving cyber defense for hybrid cloud environments.",
+      "published": "2028-08-27T00:00:00+00:00",
+      "updated": "",
+      "paper_url": "https://doi.org/10.32628/cseit251116279",
+      "pdf_url": "",
+      "categories": [],
+      "seed_topic": "tensor_compute_unit_architecture",
+      "matches": [
+        {
+          "topic_id": "tensor_compute_unit_architecture",
+          "topic_name": "张量计算单元结构",
+          "score": 0.124,
+          "level": "low",
+          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
+          "keyword_hits": [],
+          "llm_reason": "论文涉及联邦学习分布式计算，与张量计算单元结构方向存在极弱关联，因为联邦学习需在边缘设备或服务器上执行模型训练和聚合，可能使用张量计算单元加速，但摘要未明确提及硬件架构或张量核。"
+        },
+        {
+          "topic_id": "llm_low_precision_quantization",
+          "topic_name": "大模型低精度量化",
+          "score": 0.0,
+          "level": "low",
+          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
+          "keyword_hits": []
+        },
+        {
+          "topic_id": "llm_inference_cluster_communication",
+          "topic_name": "大模型推理集群通信优化",
+          "score": 0.0,
+          "level": "low",
+          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
+          "keyword_hits": []
+        },
+        {
+          "topic_id": "kvcache_compression_storage_scheduling",
+          "topic_name": "KV cache 压缩与存储调度",
+          "score": 0.0,
+          "level": "low",
+          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
+          "keyword_hits": []
+        }
+      ],
+      "best_match": {
+        "topic_id": "tensor_compute_unit_architecture",
+        "topic_name": "张量计算单元结构",
+        "score": 0.124,
+        "level": "low",
+        "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
+        "keyword_hits": [],
+        "llm_reason": "论文涉及联邦学习分布式计算，与张量计算单元结构方向存在极弱关联，因为联邦学习需在边缘设备或服务器上执行模型训练和聚合，可能使用张量计算单元加速，但摘要未明确提及硬件架构或张量核。"
+      },
+      "chinese_summary": {
+        "problem": "现代企业网络面临云原生错误配置、身份蔓延和API漏洞等持续威胁，现有SOC架构以被动响应为主，无法预测多阶段横向移动攻击。",
+        "method": "提出认知网络防御数字孪生（CCDT）架构，集成联邦学习、图神经网络攻击路径预测、对抗硬化检测模型、自主安全编排与响应（SOAR）以及欺骗工程。",
+        "innovation": "统一融合联邦学习、图神经网络和强化学习红队测试的数字孪生架构，实现跨组织隐私保护梯度共享的联邦智能网格；利用图神经网络预测攻击路径以提前发现多阶段威胁；引入强化学习红队持续压测检测模型，并通过SHAP值提供可解释性以实现审计合规。",
+        "evidence": "在CICIDS-2018和LANL数据集上的实验表明，相比传统SOC基线，攻击路径检测速度提升52%，假阳性率降低41%，平均响应时间减少60%。",
+        "limitations": "摘要未说明数字孪生同步的具体机制和开销；联邦学习可能面临恶意参与者或非IID数据挑战；实验数据集可能无法完全代表真实云原生环境；强化学习红队可能引入额外计算成本。",
+        "why_relevant": "论文涉及联邦学习分布式计算，与张量计算单元结构方向存在极弱关联，因为联邦学习需在边缘设备或服务器上执行模型训练和聚合，可能使用张量计算单元加速，但摘要未明确提及硬件架构或张量核。"
+      },
+      "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
+      "retained_from_previous_run": false
     },
     {
       "id": "dblp:conf/hpca/MajhiLMK26",
@@ -7827,7 +7897,7 @@
           "level": "low",
           "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
           "keyword_hits": [],
-          "llm_reason": "论文方向为统计因果推断，与我的研究方向（大模型推理集群通信优化）无直接关联，匹配度低。"
+          "llm_reason": "论文关注统计中的集群随机试验，而我的研究方向为分布式大模型推理集群的通信优化，二者在主题和技术上无实质关联，仅词面“集群”巧合。"
         },
         {
           "topic_id": "llm_low_precision_quantization",
@@ -7861,88 +7931,18 @@
         "level": "low",
         "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
         "keyword_hits": [],
-        "llm_reason": "论文方向为统计因果推断，与我的研究方向（大模型推理集群通信优化）无直接关联，匹配度低。"
+        "llm_reason": "论文关注统计中的集群随机试验，而我的研究方向为分布式大模型推理集群的通信优化，二者在主题和技术上无实质关联，仅词面“集群”巧合。"
       },
       "chinese_summary": {
-        "problem": "论文研究集群随机试验中的因果推断问题，目标是在没有渐近近似的情况下提供模型稳健的推断方法。",
-        "method": "提出保形因果推断框架，结合随机试验的群随机结构，进行有限样本下的有效推断。",
-        "innovation": "首次将保形推断应用于集群随机试验的因果效应估计；无需渐近近似即可获得模型稳健的置信区间；能够处理复杂的群间相关性和异质性。",
-        "evidence": "证据不足，摘要未提供具体实验或理论验证。",
-        "limitations": "全文可能对集群规模、处理分配机制等有额外假设；实际性能需要更多实证评估。",
-        "why_relevant": "论文方向为统计因果推断，与我的研究方向（大模型推理集群通信优化）无直接关联，匹配度低。"
+        "problem": "针对集群随机试验，提供一种无需渐近近似的模型稳健因果推断方法。",
+        "method": "基于共形推断（conformal inference）框架的因果效应估计与推断。",
+        "innovation": "相对已有工作，该方法不依赖大样本渐近理论，在小样本下也能提供精确推断；对模型假设具有稳健性，允许更灵活的建模；将共形推断应用于集群随机化场景，拓展了适用范围。",
+        "evidence": "证据不足（摘要缺失，无法从现有信息中确认实验或理论证据）。",
+        "limitations": "方法的具体假设条件、计算复杂度及实际数据表现需要阅读全文确认。",
+        "why_relevant": "论文关注统计中的集群随机试验，而我的研究方向为分布式大模型推理集群的通信优化，二者在主题和技术上无实质关联，仅词面“集群”巧合。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
-      "retained_from_previous_run": false
-    },
-    {
-      "id": "crossref:10.32628/cseit251116279",
-      "source": "Crossref",
-      "title": "Cyber Defense Digital Twins: A Federated Learning and Zero-Trust AI Architecture for Autonomous Threat Prediction and Response",
-      "authors": [
-        "Sivaramakrishnan Narayanan"
-      ],
-      "summary": "Modern enterprise networks operate under persistent threats that exploit cloud-native misconfigurations, identity sprawl, and API vulnerabilities at machine speed. Existing security operations center (SOC) architectures remain largely reactive, signature-dependent, and incapable of predicting multi-stage lateral movement. This paper proposes the Cognitive Cyber Defense Digital Twin (CCDT), a unified architecture integrating federated learning (FL), graph neural network (GNN)-based attack-path forecasting, adversarially hardened detection models, and autonomous Security Orchestration, Automation, and Response (SOAR) with deception engineering. The CCDT constructs a continuously synchronized digital replica of organizational assets and employs reinforcement learning-based red agents to stress-test detection models. A federated intelligence mesh enables cross-organizational privacy-preserving gradient sharing. Experimental evaluations against CICIDS-2018 and LANL datasets demonstrate 52% faster attack-path detection, 41% reduction in false positive rate, and 60% reduction in mean-time-to-respond (MTTR) compared to traditional SOC baselines. Integrated Explainable AI (XAI) modules using SHAP values enable audit-ready compliance reporting. The CCDT represents a paradigm shift from reactive monitoring to predictive, autonomous, and privacy-preserving cyber defense for hybrid cloud environments.",
-      "published": "2028-08-27T00:00:00+00:00",
-      "updated": "",
-      "paper_url": "https://doi.org/10.32628/cseit251116279",
-      "pdf_url": "",
-      "categories": [],
-      "seed_topic": "tensor_compute_unit_architecture",
-      "matches": [
-        {
-          "topic_id": "tensor_compute_unit_architecture",
-          "topic_name": "张量计算单元结构",
-          "score": 0.062,
-          "level": "low",
-          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
-          "keyword_hits": [],
-          "llm_reason": "论文聚焦网络安全防御架构，未涉及GPU/NPU/TPU张量计算单元、矩阵乘加阵列、数据流架构或低精度张量核等硬件技术，与研究方向几乎无关。摘要中提及的联邦学习、图神经网络等仅停留在应用层面，无任何硬件加速或算子映射描述。"
-        },
-        {
-          "topic_id": "llm_low_precision_quantization",
-          "topic_name": "大模型低精度量化",
-          "score": 0.0,
-          "level": "low",
-          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
-          "keyword_hits": []
-        },
-        {
-          "topic_id": "llm_inference_cluster_communication",
-          "topic_name": "大模型推理集群通信优化",
-          "score": 0.0,
-          "level": "low",
-          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
-          "keyword_hits": []
-        },
-        {
-          "topic_id": "kvcache_compression_storage_scheduling",
-          "topic_name": "KV cache 压缩与存储调度",
-          "score": 0.0,
-          "level": "low",
-          "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
-          "keyword_hits": []
-        }
-      ],
-      "best_match": {
-        "topic_id": "tensor_compute_unit_architecture",
-        "topic_name": "张量计算单元结构",
-        "score": 0.062,
-        "level": "low",
-        "reason": "文本语义与方向描述存在弱相关，需要人工复核。",
-        "keyword_hits": [],
-        "llm_reason": "论文聚焦网络安全防御架构，未涉及GPU/NPU/TPU张量计算单元、矩阵乘加阵列、数据流架构或低精度张量核等硬件技术，与研究方向几乎无关。摘要中提及的联邦学习、图神经网络等仅停留在应用层面，无任何硬件加速或算子映射描述。"
-      },
-      "chinese_summary": {
-        "problem": "现有安全运营中心架构反应式、依赖签名，无法预测多阶段横向移动，难以应对云原生错误配置、身份蔓延和API漏洞等机器速度的威胁。",
-        "method": "提出认知网络防御数字孪生（CCDT），集成联邦学习、基于图神经网络的攻击路径预测、对抗加固检测模型和自主安全编排、自动化与响应系统。",
-        "innovation": "构建持续同步的组织资产数字副本，利用强化学习红队代理压力测试检测模型；建立联邦智能网格实现跨组织隐私保护梯度共享；集成基于SHAP值的可解释AI模块，支持审计合规报告。",
-        "evidence": "在CICIDS-2018和LANL数据集上实验显示，攻击路径检测速度提升52%，假阳性率降低41%，平均响应时间减少60%。",
-        "limitations": "摘要未涉及张量计算单元或AI加速器架构；联邦学习和GNN的实现细节未知；实际部署在混合云环境中的性能需全文验证。",
-        "why_relevant": "论文聚焦网络安全防御架构，未涉及GPU/NPU/TPU张量计算单元、矩阵乘加阵列、数据流架构或低精度张量核等硬件技术，与研究方向几乎无关。摘要中提及的联邦学习、图神经网络等仅停留在应用层面，无任何硬件加速或算子映射描述。"
-      },
-      "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19416,7 +19416,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19486,7 +19486,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19557,7 +19557,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19629,7 +19629,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19700,7 +19700,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19770,7 +19770,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19839,7 +19839,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -19910,7 +19910,7 @@
         "why_relevant": "文本语义与方向描述存在弱相关，需要人工复核。"
       },
       "first_seen_at": "2026-05-30T04:11:41.833362+00:00",
-      "last_seen_at": "2026-05-30T05:36:39.370690+00:00",
+      "last_seen_at": "2026-05-30T05:44:49.832810+00:00",
       "retained_from_previous_run": false
     },
     {
@@ -72292,7 +72292,7 @@
     "new_paper_count": 99,
     "days": 1,
     "collection_mode": "lookback",
-    "collection_cutoff_iso": "2026-05-29T05:36:39.370690+00:00",
+    "collection_cutoff_iso": "2026-05-29T05:44:49.832810+00:00",
     "max_per_topic": 25,
     "sources": [
       {
@@ -72598,7 +72598,7 @@
     "dropped_low_relevance_count": 0,
     "max_stored_papers": 800,
     "max_data_bytes": 8388608,
-    "data_bytes": 2851444,
+    "data_bytes": 2851706,
     "storage_trimmed_count": 89,
     "storage_trimmed_by_level": {
       "high": 0,
