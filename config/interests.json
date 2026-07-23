@@ -1,5 +1,71 @@
 {
   "sources": [
+    {
+      "type": "arxiv",
+      "name": "arXiv"
+    },
+    {
+      "type": "openalex",
+      "name": "OpenAlex"
+    },
+    {
+      "type": "crossref",
+      "name": "Crossref"
+    }
+  ],
+  "conference_sources": {
+    "enabled": false,
+    "include_default_venues": false,
+    "venues": []
+  },
+  "topics": [
+    {
+      "id": "imidazole_propionate_obesity",
+      "name": "咪唑丙酸介导的肥胖机制",
+      "description": "关注肠道菌群来源咪唑丙酸（ImP）在肥胖、脂肪组织功能障碍、胰岛素抵抗和代谢炎症中的作用及分子机制。",
+      "keywords": [
+        "imidazole propionate",
+        "imidazole propionic acid",
+        "ImP obesity",
+        "gut microbial metabolite obesity",
+        "adipose tissue dysfunction",
+        "insulin resistance",
+        "metabolic inflammation",
+        "mTORC1 signaling",
+        "AMPK signaling",
+        "histidine metabolism microbiome"
+      ],
+      "arxiv_categories": [
+        "q-bio.BM",
+        "q-bio.TO",
+        "q-bio.MN"
+      ]
+    },
+    {
+      "id": "gut_microbiota_adipose_crosstalk",
+      "name": "肠道菌群与脂肪组织代谢互作",
+      "description": "关注肠道微生物代谢物与脂肪细胞分化、脂质代谢、产热、免疫微环境及肥胖表型之间的互作。",
+      "keywords": [
+        "gut microbiota adipose tissue",
+        "microbial metabolites adipocytes",
+        "adipogenesis obesity",
+        "adipose tissue inflammation",
+        "brown adipose thermogenesis",
+        "white adipose browning",
+        "lipid metabolism microbiome",
+        "metabolic endotoxemia",
+        "adipokines gut microbiome",
+        "host microbiome metabolism"
+      ],
+      "arxiv_categories": [
+        "q-bio.BM",
+        "q-bio.TO",
+        "q-bio.CB"
+      ]
+    }
+  ]
+}{
+  "sources": [
     { "type": "arxiv", "name": "arXiv" }
   ],
   "conference_sources": {
