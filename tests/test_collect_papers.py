@@ -17,6 +17,8 @@ from scripts.collect_papers import (
     conference_abstract_sources,
     default_conference_years,
     enrich_conference_paper_from_arxiv,
+    europe_pmc_paper_from_result,
+    europe_pmc_query_for_topic,
     fetch_arxiv,
     find_conference_abstract_by_title,
     is_relevant_enough,
@@ -34,6 +36,7 @@ from scripts.collect_papers import (
     parse_sources,
     should_retry_arxiv_error,
     should_summarize_paper_with_llm,
+    score_paper,
     split_conference_payload,
     source_request_headers,
     SourceConfig,
@@ -190,6 +193,86 @@ class RetentionTest(unittest.TestCase):
         self.assertEqual(sources[1].name, "Journal Feed")
         self.assertEqual(sources[1].url, "https://example.com/rss.xml")
         self.assertEqual(sources[1].headers_env, "CUSTOM_FEED_HEADERS")
+
+    def test_europe_pmc_source_is_supported(self) -> None:
+        sources = parse_sources(
+            {"sources": [{"type": "europe_pmc", "name": "PubMed · Europe PMC"}]}
+        )
+
+        self.assertEqual(sources[0].type, "europe_pmc")
+        self.assertEqual(sources[0].name, "PubMed · Europe PMC")
+
+    def test_europe_pmc_query_uses_custom_query_and_exclusions(self) -> None:
+        topic = Topic(
+            id="glp1",
+            name="GLP-1与肥胖",
+            description="",
+            keywords=["semaglutide"],
+            arxiv_categories=[],
+            exclude_keywords=["type 1 diabetes"],
+            europe_pmc_query='TITLE_ABS:semaglutide AND TITLE_ABS:obesity',
+        )
+
+        query = europe_pmc_query_for_topic(topic)
+
+        self.assertIn("TITLE_ABS:semaglutide", query)
+        self.assertIn('NOT (TITLE_ABS:"type 1 diabetes")', query)
+        self.assertIn("SRC:MED", query)
+        self.assertTrue(query.endswith("sort_date:y"))
+
+    def test_europe_pmc_result_normalizes_pubmed_metadata(self) -> None:
+        topic = Topic(
+            id="glp1",
+            name="GLP-1与肥胖",
+            description="",
+            keywords=["semaglutide"],
+            arxiv_categories=[],
+        )
+        source = SourceConfig(type="europe_pmc", name="PubMed · Europe PMC")
+        item = {
+            "id": "12345678",
+            "source": "MED",
+            "pmid": "12345678",
+            "pmcid": "PMC123",
+            "doi": "10.1000/example",
+            "title": "Semaglutide for obesity",
+            "abstractText": "<p>A randomized clinical trial.</p>",
+            "firstPublicationDate": "2026-07-20",
+            "firstIndexDate": "2026-07-21",
+            "authorList": {"author": [{"fullName": "Ada Example"}]},
+            "journalTitle": "Obesity",
+            "pubTypeList": {"pubType": ["Clinical Trial"]},
+            "isOpenAccess": "Y",
+        }
+
+        candidate = europe_pmc_paper_from_result(item, topic, source)
+
+        self.assertIsNotNone(candidate)
+        self.assertEqual(candidate["id"], "pubmed:12345678")
+        self.assertEqual(candidate["paper_url"], "https://pubmed.ncbi.nlm.nih.gov/12345678/")
+        self.assertEqual(candidate["authors"], ["Ada Example"])
+        self.assertEqual(candidate["doi"], "10.1000/example")
+        self.assertIn("Clinical Trial", candidate["categories"])
+
+    def test_exclusion_keyword_rejects_paper(self) -> None:
+        topic = Topic(
+            id="glp1",
+            name="GLP-1与肥胖",
+            description="",
+            keywords=["semaglutide"],
+            arxiv_categories=[],
+            exclude_keywords=["type 1 diabetes"],
+        )
+        candidate = {
+            "title": "Semaglutide in type 1 diabetes",
+            "summary": "This study evaluates semaglutide.",
+        }
+
+        match = score_paper(topic, candidate)
+
+        self.assertEqual(match["score"], 0.0)
+        self.assertEqual(match["excluded_by"], ["type 1 diabetes"])
+        self.assertFalse(is_relevant_enough(candidate, match))
 
     def test_semantic_scholar_sources_are_opt_in(self) -> None:
         sources = parse_sources({"sources": ["arxiv", "semantic_scholar"]})
