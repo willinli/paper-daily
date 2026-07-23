@@ -18,7 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +29,7 @@ OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 CROSSREF_WORKS_URL = "https://api.crossref.org/works"
 SEMANTIC_SCHOLAR_SEARCH_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
 SERPAPI_SEARCH_URL = "https://serpapi.com/search.json"
+EUROPE_PMC_SEARCH_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 ARXIV_NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 DEFAULT_CONFIG = Path("config/interests.json")
 DEFAULT_OUTPUT = Path("web/data/papers.json")
@@ -53,6 +54,8 @@ class Topic:
     description: str
     keywords: list[str]
     arxiv_categories: list[str]
+    exclude_keywords: list[str] = field(default_factory=list)
+    europe_pmc_query: str = ""
 
 
 @dataclass(frozen=True)
@@ -127,6 +130,8 @@ def parse_topics(config: dict[str, Any]) -> list[Topic]:
                 description=item.get("description", ""),
                 keywords=[str(k) for k in item.get("keywords", [])],
                 arxiv_categories=[str(c) for c in item.get("arxiv_categories", [])],
+                exclude_keywords=[str(k) for k in item.get("exclude_keywords", [])],
+                europe_pmc_query=str(item.get("europe_pmc_query") or ""),
             )
         )
     if not topics:
@@ -1180,6 +1185,156 @@ def fetch_crossref(topic: Topic, max_results: int, source: SourceConfig) -> list
     return papers
 
 
+def europe_pmc_query_for_topic(topic: Topic) -> str:
+    if topic.europe_pmc_query.strip():
+        query = topic.europe_pmc_query.strip()
+    else:
+        terms = []
+        for keyword in (topic.keywords or [topic.name])[:12]:
+            escaped = normalize_space(keyword).replace('"', '\\"')
+            if escaped:
+                terms.append(f'TITLE_ABS:"{escaped}"')
+        query = "(" + " OR ".join(terms) + ")" if terms else f'TITLE_ABS:"{topic.name}"'
+
+    exclusions = []
+    for keyword in topic.exclude_keywords[:8]:
+        escaped = normalize_space(keyword).replace('"', '\\"')
+        if escaped:
+            exclusions.append(f'TITLE_ABS:"{escaped}"')
+    if exclusions:
+        query = f"({query}) NOT (" + " OR ".join(exclusions) + ")"
+    if "SRC:" not in query.upper():
+        query = f"({query}) AND SRC:MED"
+    return f"{query} sort_date:y"
+
+
+def europe_pmc_authors(item: dict[str, Any]) -> list[str]:
+    authors = []
+    for author in (item.get("authorList") or {}).get("author", [])[:20]:
+        if not isinstance(author, dict):
+            continue
+        name = normalize_space(
+            str(author.get("fullName") or "")
+            or f"{author.get('firstName', '')} {author.get('lastName', '')}"
+        )
+        if name:
+            authors.append(name)
+    if authors:
+        return authors
+    author_string = normalize_space(str(item.get("authorString") or ""))
+    return [name.strip() for name in author_string.split(",") if name.strip()][:20]
+
+
+def europe_pmc_categories(item: dict[str, Any]) -> list[str]:
+    categories: list[str] = []
+    journal = normalize_space(
+        str(item.get("journalTitle") or (item.get("journalInfo") or {}).get("journal", {}).get("title") or "")
+    )
+    if journal:
+        categories.append(journal)
+
+    for publication_type in (item.get("pubTypeList") or {}).get("pubType", [])[:8]:
+        text = normalize_space(str(publication_type))
+        if text and text not in categories:
+            categories.append(text)
+
+    for heading in (item.get("meshHeadingList") or {}).get("meshHeading", [])[:12]:
+        if not isinstance(heading, dict):
+            continue
+        descriptor = heading.get("descriptorName")
+        if isinstance(descriptor, dict):
+            descriptor = descriptor.get("#text") or descriptor.get("text")
+        text = normalize_space(str(descriptor or ""))
+        if text and text not in categories:
+            categories.append(text)
+    return categories[:12]
+
+
+def europe_pmc_pdf_url(item: dict[str, Any]) -> str:
+    urls = (item.get("fullTextUrlList") or {}).get("fullTextUrl", [])
+    for entry in urls:
+        if not isinstance(entry, dict):
+            continue
+        url = str(entry.get("url") or "")
+        style = str(entry.get("documentStyle") or "").lower()
+        if url and (style == "pdf" or url.lower().endswith(".pdf")):
+            return url
+    pmcid = str(item.get("pmcid") or "")
+    if pmcid and str(item.get("isOpenAccess") or "").upper() == "Y":
+        return f"https://europepmc.org/articles/{pmcid}?pdf=render"
+    return ""
+
+
+def europe_pmc_paper_from_result(
+    item: dict[str, Any],
+    topic: Topic,
+    source: SourceConfig,
+) -> dict[str, Any] | None:
+    title = normalize_space(str(item.get("title") or ""))
+    pmid = str(item.get("pmid") or "")
+    pmcid = str(item.get("pmcid") or "")
+    doi = str(item.get("doi") or "")
+    source_id = str(item.get("source") or "MED")
+    external_id = str(item.get("id") or item.get("extId") or pmid or pmcid or doi)
+    if not title or not external_id:
+        return None
+
+    if pmid:
+        paper_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+    elif pmcid:
+        paper_url = f"https://europepmc.org/articles/{pmcid}"
+    elif doi:
+        paper_url = f"https://doi.org/{doi}"
+    else:
+        paper_url = f"https://europepmc.org/article/{source_id}/{external_id}"
+
+    published = (
+        item.get("firstPublicationDate")
+        or item.get("electronicPublicationDate")
+        or (item.get("journalInfo") or {}).get("printPublicationDate")
+        or item.get("pubYear")
+    )
+    return {
+        "id": f"pubmed:{pmid or external_id}",
+        "source": source.name,
+        "title": title,
+        "authors": europe_pmc_authors(item),
+        "summary": html_to_text(str(item.get("abstractText") or "")),
+        "published": date_to_iso(published),
+        "updated": date_to_iso(item.get("firstIndexDate")),
+        "paper_url": paper_url,
+        "pdf_url": europe_pmc_pdf_url(item),
+        "categories": europe_pmc_categories(item),
+        "seed_topic": topic.id,
+        "pmid": pmid,
+        "pmcid": pmcid,
+        "doi": doi,
+    }
+
+
+def fetch_europe_pmc(topic: Topic, max_results: int, source: SourceConfig) -> list[dict[str, Any]]:
+    params = {
+        "query": europe_pmc_query_for_topic(topic),
+        "format": "json",
+        "resultType": "core",
+        "pageSize": str(min(max(1, max_results), 100)),
+    }
+    url = f"{EUROPE_PMC_SEARCH_URL}?{urllib.parse.urlencode(params)}"
+    data = request_json(
+        url,
+        headers={"User-Agent": "paper-daily-collector/1.0"},
+        timeout=float(os.getenv("EUROPE_PMC_TIMEOUT_SECONDS", "90")),
+    )
+    papers = []
+    for item in (data.get("resultList") or {}).get("result", []):
+        if not isinstance(item, dict):
+            continue
+        candidate = europe_pmc_paper_from_result(item, topic, source)
+        if candidate:
+            papers.append(candidate)
+    return papers
+
+
 def fetch_semantic_scholar(topic: Topic, max_results: int, source: SourceConfig) -> list[dict[str, Any]]:
     params = {
         "query": topic_plain_query(topic),
@@ -1326,6 +1481,8 @@ def fetch_source_topic(source: SourceConfig, topic: Topic, max_results: int) -> 
         return fetch_openalex(topic, max_results, source)
     if source.type == "crossref":
         return fetch_crossref(topic, max_results, source)
+    if source.type in {"europe_pmc", "pubmed", "pubmed_europe_pmc"}:
+        return fetch_europe_pmc(topic, max_results, source)
     if source.type == "semantic_scholar":
         return fetch_semantic_scholar(topic, max_results, source)
     if source.type == "google_scholar_serpapi":
@@ -1403,6 +1560,11 @@ def keyword_score(topic: Topic, paper: dict[str, Any]) -> tuple[float, list[str]
     return score, hits[:6]
 
 
+def exclusion_hits(topic: Topic, paper: dict[str, Any]) -> list[str]:
+    haystack = f"{paper.get('title', '')} {paper.get('summary', '')}".lower()
+    return [keyword for keyword in topic.exclude_keywords if keyword.lower() in haystack][:6]
+
+
 def category_score(topic: Topic, paper: dict[str, Any]) -> float:
     paper_categories = set(paper.get("categories", []))
     topic_categories = set(topic.arxiv_categories)
@@ -1430,9 +1592,10 @@ def match_level(score: float) -> str:
 
 def score_paper(topic: Topic, paper: dict[str, Any]) -> dict[str, Any]:
     k_score, hits = keyword_score(topic, paper)
+    excluded_by = exclusion_hits(topic, paper)
     c_score = category_score(topic, paper)
     l_score = lexical_overlap_score(topic, paper)
-    base_score = round(0.50 * k_score + 0.25 * c_score + 0.25 * l_score, 3)
+    base_score = 0.0 if excluded_by else round(0.50 * k_score + 0.25 * c_score + 0.25 * l_score, 3)
     reason_parts = []
     if hits:
         reason_parts.append("关键词命中：" + "、".join(hits))
@@ -1447,6 +1610,7 @@ def score_paper(topic: Topic, paper: dict[str, Any]) -> dict[str, Any]:
         "level": match_level(base_score),
         "reason": "；".join(reason_parts),
         "keyword_hits": hits,
+        "excluded_by": excluded_by,
     }
 
 
@@ -1475,6 +1639,8 @@ def has_meaningful_summary(paper: dict[str, Any], min_chars: int = 80) -> bool:
 
 
 def is_relevant_enough(paper: dict[str, Any], best_match: dict[str, Any]) -> bool:
+    if best_match.get("excluded_by"):
+        return False
     if best_match.get("keyword_hits"):
         return True
 
