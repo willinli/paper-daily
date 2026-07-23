@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>个人化检索设置 · Paper Daily</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09111f;
+        --panel: #111c2e;
+        --panel-2: #16243a;
+        --line: #2b3a53;
+        --text: #eef5ff;
+        --muted: #9fb0c8;
+        --accent: #66e3bd;
+        --accent-2: #5aa7ff;
+        --danger: #ff8b8b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 20% 0, rgba(90, 167, 255, .18), transparent 32rem),
+          var(--bg);
+        color: var(--text);
+        font: 15px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      a { color: var(--accent); }
+      button, input, textarea { font: inherit; }
+      .page { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
+      .top { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 24px; }
+      h1 { margin: 0 0 6px; font-size: clamp(25px, 4vw, 38px); }
+      h2, h3 { margin-top: 0; }
+      p { margin: 0; }
+      .muted { color: var(--muted); }
+      .panel {
+        background: rgba(17, 28, 46, .94);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px;
+        margin-bottom: 18px;
+        box-shadow: 0 16px 50px rgba(0, 0, 0, .18);
+      }
+      .notice { border-color: rgba(102, 227, 189, .48); }
+      .notice strong { color: var(--accent); }
+      .source-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+      .source {
+        display: flex; gap: 10px; align-items: flex-start;
+        padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel-2);
+      }
+      .source input { margin-top: 5px; accent-color: var(--accent); }
+      .source span { display: block; color: var(--muted); font-size: 13px; }
+      .section-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 14px; }
+      .topic {
+        border: 1px solid var(--line); background: var(--panel-2);
+        border-radius: 15px; padding: 18px; margin-top: 14px;
+      }
+      .topic-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+      .topic-number { color: var(--accent); font-weight: 700; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      label { display: block; color: var(--muted); font-size: 13px; margin-top: 12px; }
+      input[type="text"], textarea {
+        width: 100%; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px;
+        background: #0d1727; color: var(--text); padding: 10px 12px; outline: none;
+      }
+      input[type="text"]:focus, textarea:focus { border-color: var(--accent-2); }
+      textarea { resize: vertical; min-height: 110px; }
+      textarea.short { min-height: 78px; }
+      details { margin-top: 12px; }
+      summary { cursor: pointer; color: var(--accent-2); }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        border: 1px solid var(--line); border-radius: 11px; padding: 10px 15px;
+        color: var(--text); text-decoration: none; background: var(--panel-2); cursor: pointer;
+      }
+      .btn.primary { border-color: transparent; background: var(--accent); color: #062019; font-weight: 750; }
+      .btn.secondary { background: #1d3655; }
+      .btn.danger { color: var(--danger); }
+      .output { display: none; margin-top: 16px; }
+      .output.show { display: block; }
+      #configOutput { min-height: 240px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
+      .small { font-size: 13px; }
+      @media (max-width: 700px) {
+        .top, .section-head { align-items: stretch; flex-direction: column; }
+        .grid { grid-template-columns: 1fr; gap: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="top">
+        <div>
+          <h1>个人化检索设置</h1>
+          <p class="muted">选择文献源、增删研究方向，并用普通文本维护关键词。</p>
+        </div>
+        <a class="btn" href="./index.html">返回文献库</a>
+      </div>
+
+      <section class="panel notice">
+        <h2>DeepSeek 已选定</h2>
+        <p>
+          请把密钥保存为 GitHub Actions Secret：<strong>DEEPSEEK_API_KEY</strong>。
+          密钥不会出现在本页面或配置文件中。
+        </p>
+        <div class="actions">
+          <a class="btn secondary" target="_blank" rel="noreferrer"
+             href="https://github.com/willinli/paper-daily/settings/secrets/actions/new">添加 DeepSeek 密钥</a>
+          <a class="btn" target="_blank" rel="noreferrer"
+             href="https://github.com/willinli/paper-daily/actions">查看更新任务</a>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>文献来源</h2>
+        <div class="source-grid">
+          <label class="source">
+            <input type="checkbox" data-source="europe_pmc" checked />
+            <div><strong>PubMed</strong><span>通过 Europe PMC 获取摘要、PMID、MeSH 与全文链接</span></div>
+          </label>
+          <label class="source">
+            <input type="checkbox" data-source="openalex" checked />
+            <div><strong>OpenAlex</strong><span>补充期刊、作者与开放获取信息</span></div>
+          </label>
+          <label class="source">
+            <input type="checkbox" data-source="crossref" checked />
+            <div><strong>Crossref</strong><span>补充 DOI 与出版信息</span></div>
+          </label>
+          <label class="source">
+            <input type="checkbox" data-source="arxiv" checked />
+            <div><strong>arXiv</strong><span>补充基础研究和生物信息学预印本</span></div>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <h2>研究方向</h2>
+            <p class="muted">每行一个关键词；排除词会直接过滤明显不相关的文献。</p>
+          </div>
+          <button class="btn" id="addTopic" type="button">＋ 添加方向</button>
+        </div>
+        <div id="topics"></div>
+      </section>
+
+      <section class="panel">
+        <h2>生成并应用配置</h2>
+        <p class="muted">
+          本页面不会保存 GitHub 权限。点击后会复制配置，并打开一个标题为
+          “Research Interests”的 GitHub Issue；确认内容后由你点击提交，Actions 会自动更新网站。
+        </p>
+        <div class="actions">
+          <button class="btn primary" id="openIssue" type="button">首次新建配置 Issue</button>
+          <button class="btn secondary" id="copyConfig" type="button">复制配置</button>
+          <a class="btn" target="_blank" rel="noreferrer"
+             href="https://github.com/willinli/paper-daily/issues?q=is%3Aissue+is%3Aopen+%22Research+Interests%22">编辑已有配置</a>
+        </div>
+        <p id="status" class="small muted" aria-live="polite"></p>
+        <div class="output" id="outputBox">
+          <label>生成的配置
+            <textarea id="configOutput" readonly></textarea>
+          </label>
+        </div>
+      </section>
+    </main>
+
+    <template id="topicTemplate">
+      <article class="topic">
+        <div class="topic-head">
+          <span class="topic-number"></span>
+          <button class="btn danger remove-topic" type="button">删除</button>
+        </div>
+        <div class="grid">
+          <label>方向名称
+            <input class="topic-name" type="text" />
+          </label>
+          <label>方向编号（英文）
+            <input class="topic-id" type="text" />
+          </label>
+        </div>
+        <label>关注内容
+          <textarea class="topic-description short"></textarea>
+        </label>
+        <div class="grid">
+          <label>纳入关键词（每行一个）
+            <textarea class="topic-keywords"></textarea>
+          </label>
+          <label>排除关键词（每行一个）
+            <textarea class="topic-excludes"></textarea>
+          </label>
+        </div>
+        <details>
+          <summary>高级：PubMed 精确检索式</summary>
+          <label>Europe PMC / PubMed 检索式
+            <textarea class="topic-query short"></textarea>
+          </label>
+        </details>
+      </article>
+    </template>
+
+    <script>
+      const SOURCE_NAMES = {
+        europe_pmc: "PubMed · Europe PMC",
+        openalex: "OpenAlex",
+        crossref: "Crossref",
+        arxiv: "arXiv",
+      };
+
+      const fallbackTopics = [
+        {
+          id: "glp1_obesity_pharmacotherapy",
+          name: "GLP-1药物与肥胖治疗",
+          description: "关注GLP-1受体激动剂及多靶点肠促胰素药物在肥胖治疗、体重维持、体成分改善和心肾代谢结局中的疗效、安全性与作用机制。",
+          keywords: ["GLP-1 receptor agonist", "semaglutide obesity", "tirzepatide obesity", "liraglutide obesity", "retatrutide obesity", "dual GIP GLP-1 agonist", "obesity pharmacotherapy", "weight loss maintenance", "body composition", "cardiometabolic outcomes"],
+          exclude_keywords: ["type 1 diabetes", "pediatric diabetes without obesity"],
+          europe_pmc_query: "(TITLE_ABS:\"GLP-1 receptor agonist\" OR TITLE_ABS:semaglutide OR TITLE_ABS:tirzepatide OR TITLE_ABS:liraglutide OR TITLE_ABS:retatrutide) AND (TITLE_ABS:obesity OR TITLE_ABS:\"weight loss\")",
+        },
+        {
+          id: "bariatric_metabolic_surgery",
+          name: "减重与代谢手术",
+          description: "关注袖状胃切除、Roux-en-Y胃旁路等减重代谢手术的适应证、围手术期管理、长期减重、体重反弹、代谢结局及术后机制。",
+          keywords: ["bariatric surgery", "metabolic surgery", "sleeve gastrectomy", "Roux-en-Y gastric bypass", "one-anastomosis gastric bypass", "weight regain after bariatric surgery", "metabolic outcomes bariatric surgery", "gut hormones after bariatric surgery", "bile acids bariatric surgery", "microbiome bariatric surgery"],
+          exclude_keywords: ["animal model only"],
+          europe_pmc_query: "(TITLE_ABS:\"bariatric surgery\" OR TITLE_ABS:\"metabolic surgery\" OR TITLE_ABS:\"sleeve gastrectomy\" OR TITLE_ABS:\"Roux-en-Y gastric bypass\") AND (TITLE_ABS:obesity OR TITLE_ABS:\"weight loss\" OR TITLE_ABS:\"weight regain\")",
+        },
+        {
+          id: "gut_microbiota_obesity",
+          name: "肠道菌群与肥胖",
+          description: "关注肠道菌群组成、菌源代谢物、肠屏障、胆汁酸、代谢性内毒素血症及其与脂肪组织炎症、胰岛素抵抗和肥胖表型的关系。",
+          keywords: ["gut microbiota obesity", "gut microbiome metabolic disease", "microbial metabolites obesity", "short-chain fatty acids obesity", "bile acid microbiome metabolism", "intestinal barrier obesity", "metabolic endotoxemia", "adipose tissue inflammation microbiome", "host microbiome metabolism", "probiotics obesity"],
+          exclude_keywords: ["aquaculture", "plant microbiome"],
+          europe_pmc_query: "(TITLE_ABS:\"gut microbiota\" OR TITLE_ABS:\"gut microbiome\" OR TITLE_ABS:\"microbial metabolites\") AND (TITLE_ABS:obesity OR TITLE_ABS:\"insulin resistance\" OR TITLE_ABS:adipose)",
+        },
+        {
+          id: "imidazole_propionate_obesity",
+          name: "咪唑丙酸介导的肥胖机制",
+          description: "关注肠道菌群来源咪唑丙酸在肥胖、脂肪组织功能障碍、胰岛素抵抗和代谢炎症中的作用及mTORC1、AMPK等分子机制。",
+          keywords: ["imidazole propionate", "imidazole propionic acid", "ImP obesity", "gut microbial metabolite obesity", "adipose tissue dysfunction", "insulin resistance", "metabolic inflammation", "mTORC1 signaling", "AMPK signaling", "histidine metabolism microbiome"],
+          exclude_keywords: [],
+          europe_pmc_query: "(TITLE_ABS:\"imidazole propionate\" OR TITLE_ABS:\"imidazole propionic acid\") AND (TITLE_ABS:obesity OR TITLE_ABS:\"insulin resistance\" OR TITLE_ABS:adipose OR TITLE_ABS:metabolism)",
+        },
+      ];
+
+      const topicsNode = document.querySelector("#topics");
+      const template = document.querySelector("#topicTemplate");
+      const statusNode = document.querySelector("#status");
+      const outputBox = document.querySelector("#outputBox");
+      const output = document.querySelector("#configOutput");
+
+      function lines(value) {
+        return String(value || "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+      }
+
+      function slugify(value) {
+        return String(value || "topic").toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || `topic_${Date.now()}`;
+      }
+
+      function renumber() {
+        [...topicsNode.querySelectorAll(".topic")].forEach((node, index) => {
+          node.querySelector(".topic-number").textContent = `方向 ${index + 1}`;
+          node.querySelector(".remove-topic").disabled = topicsNode.children.length === 1;
+        });
+      }
+
+      function addTopic(topic = {}) {
+        const node = template.content.firstElementChild.cloneNode(true);
+        node.querySelector(".topic-name").value = topic.name || "";
+        node.querySelector(".topic-id").value = topic.id || "";
+        node.querySelector(".topic-description").value = topic.description || "";
+        node.querySelector(".topic-keywords").value = (topic.keywords || []).join("\n");
+        node.querySelector(".topic-excludes").value = (topic.exclude_keywords || []).join("\n");
+        node.querySelector(".topic-query").value = topic.europe_pmc_query || "";
+        node.querySelector(".remove-topic").addEventListener("click", () => {
+          node.remove();
+          renumber();
+        });
+        const name = node.querySelector(".topic-name");
+        const id = node.querySelector(".topic-id");
+        name.addEventListener("blur", () => {
+          if (!id.value.trim()) id.value = slugify(name.value);
+        });
+        topicsNode.appendChild(node);
+        renumber();
+      }
+
+      function buildConfig() {
+        const sources = [...document.querySelectorAll("[data-source]:checked")].map((input) => ({
+          type: input.dataset.source,
+          name: SOURCE_NAMES[input.dataset.source],
+        }));
+        const topics = [...topicsNode.querySelectorAll(".topic")].map((node) => {
+          const name = node.querySelector(".topic-name").value.trim();
+          const keywords = lines(node.querySelector(".topic-keywords").value);
+          return {
+            id: node.querySelector(".topic-id").value.trim() || slugify(name),
+            name,
+            description: node.querySelector(".topic-description").value.trim(),
+            keywords,
+            exclude_keywords: lines(node.querySelector(".topic-excludes").value),
+            europe_pmc_query: node.querySelector(".topic-query").value.trim(),
+            arxiv_categories: ["q-bio.BM", "q-bio.TO"],
+          };
+        });
+        if (!sources.length) throw new Error("请至少选择一个文献来源。");
+        if (!topics.length || topics.some((topic) => !topic.name || !topic.keywords.length)) {
+          throw new Error("每个方向都需要填写名称和至少一个关键词。");
+        }
+        return {
+          sources,
+          conference_sources: { enabled: false, include_default_venues: false, venues: [] },
+          topics,
+        };
+      }
+
+      async function copyConfig() {
+        const text = JSON.stringify(buildConfig(), null, 2);
+        output.value = text;
+        outputBox.classList.add("show");
+        try {
+          await navigator.clipboard.writeText(text);
+          statusNode.textContent = "配置已复制。";
+        } catch {
+          output.focus();
+          output.select();
+          statusNode.textContent = "浏览器未允许自动复制，请从下方文本框复制。";
+        }
+        return text;
+      }
+
+      document.querySelector("#addTopic").addEventListener("click", () => addTopic());
+      document.querySelector("#copyConfig").addEventListener("click", async () => {
+        try { await copyConfig(); } catch (error) { statusNode.textContent = error.message; }
+      });
+      document.querySelector("#openIssue").addEventListener("click", async () => {
+        try {
+          const text = await copyConfig();
+          const body = `请保持本 Issue 标题为 Research Interests。保存后 Paper Daily 会自动更新。\\n\\n\\\`\\\`\\\`json\\n${text}\\n\\\`\\\`\\\``;
+          const url = new URL("https://github.com/willinli/paper-daily/issues/new");
+          url.searchParams.set("title", "Research Interests");
+          url.searchParams.set("body", body);
+          window.open(url.toString(), "_blank", "noopener,noreferrer");
+          statusNode.textContent = "已打开 GitHub。请核对配置后点击 Submit new issue。";
+        } catch (error) {
+          statusNode.textContent = error.message;
+        }
+      });
+
+      async function initialize() {
+        let topics = fallbackTopics;
+        try {
+          const response = await fetch("./data/papers.json", { cache: "no-store" });
+          if (response.ok) {
+            const data = await response.json();
+            const hasPubMed = (data.stats?.sources || []).some((source) =>
+              ["europe_pmc", "pubmed", "pubmed_europe_pmc"].includes(source.type)
+            );
+            if (hasPubMed && Array.isArray(data.topics) && data.topics.length) topics = data.topics;
+          }
+        } catch {
+          // Use the built-in biomedical defaults.
+        }
+        topics.forEach(addTopic);
+      }
+
+      initialize();
+    </script>
+  </body>
+</html>
