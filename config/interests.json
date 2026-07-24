@@ -1,8 +1,8 @@
 {
   "sources": [
     {
-      "type": "arxiv",
-      "name": "arXiv"
+      "type": "europe_pmc",
+      "name": "PubMed · Europe PMC"
     },
     {
       "type": "openalex",
@@ -11,6 +11,10 @@
     {
       "type": "crossref",
       "name": "Crossref"
+    },
+    {
+      "type": "arxiv",
+      "name": "arXiv"
     }
   ],
   "conference_sources": {
@@ -20,9 +24,87 @@
   },
   "topics": [
     {
+      "id": "glp1_obesity_pharmacotherapy",
+      "name": "GLP-1药物与肥胖治疗",
+      "description": "关注GLP-1受体激动剂及多靶点肠促胰素药物在肥胖治疗、体重维持、体成分改善和心肾代谢结局中的疗效、安全性与作用机制。",
+      "keywords": [
+        "GLP-1 receptor agonist",
+        "semaglutide obesity",
+        "tirzepatide obesity",
+        "liraglutide obesity",
+        "retatrutide obesity",
+        "dual GIP GLP-1 agonist",
+        "obesity pharmacotherapy",
+        "weight loss maintenance",
+        "body composition",
+        "cardiometabolic outcomes"
+      ],
+      "exclude_keywords": [
+        "type 1 diabetes",
+        "pediatric diabetes without obesity"
+      ],
+      "europe_pmc_query": "(TITLE_ABS:\"GLP-1 receptor agonist\" OR TITLE_ABS:semaglutide OR TITLE_ABS:tirzepatide OR TITLE_ABS:liraglutide OR TITLE_ABS:retatrutide) AND (TITLE_ABS:obesity OR TITLE_ABS:\"weight loss\")",
+      "arxiv_categories": [
+        "q-bio.BM",
+        "q-bio.TO"
+      ]
+    },
+    {
+      "id": "bariatric_metabolic_surgery",
+      "name": "减重与代谢手术",
+      "description": "关注袖状胃切除、Roux-en-Y胃旁路等减重代谢手术的适应证、围手术期管理、长期减重、体重反弹、代谢结局及术后机制。",
+      "keywords": [
+        "bariatric surgery",
+        "metabolic surgery",
+        "sleeve gastrectomy",
+        "Roux-en-Y gastric bypass",
+        "one-anastomosis gastric bypass",
+        "weight regain after bariatric surgery",
+        "metabolic outcomes bariatric surgery",
+        "gut hormones after bariatric surgery",
+        "bile acids bariatric surgery",
+        "microbiome bariatric surgery"
+      ],
+      "exclude_keywords": [
+        "animal model only"
+      ],
+      "europe_pmc_query": "(TITLE_ABS:\"bariatric surgery\" OR TITLE_ABS:\"metabolic surgery\" OR TITLE_ABS:\"sleeve gastrectomy\" OR TITLE_ABS:\"Roux-en-Y gastric bypass\") AND (TITLE_ABS:obesity OR TITLE_ABS:\"weight loss\" OR TITLE_ABS:\"weight regain\")",
+      "arxiv_categories": [
+        "q-bio.BM",
+        "q-bio.TO"
+      ]
+    },
+    {
+      "id": "gut_microbiota_obesity",
+      "name": "肠道菌群与肥胖",
+      "description": "关注肠道菌群组成、菌源代谢物、肠屏障、胆汁酸、代谢性内毒素血症及其与脂肪组织炎症、胰岛素抵抗和肥胖表型的关系。",
+      "keywords": [
+        "gut microbiota obesity",
+        "gut microbiome metabolic disease",
+        "microbial metabolites obesity",
+        "short-chain fatty acids obesity",
+        "bile acid microbiome metabolism",
+        "intestinal barrier obesity",
+        "metabolic endotoxemia",
+        "adipose tissue inflammation microbiome",
+        "host microbiome metabolism",
+        "probiotics obesity"
+      ],
+      "exclude_keywords": [
+        "aquaculture",
+        "plant microbiome"
+      ],
+      "europe_pmc_query": "(TITLE_ABS:\"gut microbiota\" OR TITLE_ABS:\"gut microbiome\" OR TITLE_ABS:\"microbial metabolites\") AND (TITLE_ABS:obesity OR TITLE_ABS:\"insulin resistance\" OR TITLE_ABS:adipose)",
+      "arxiv_categories": [
+        "q-bio.BM",
+        "q-bio.TO",
+        "q-bio.MN"
+      ]
+    },
+    {
       "id": "imidazole_propionate_obesity",
       "name": "咪唑丙酸介导的肥胖机制",
-      "description": "关注肠道菌群来源咪唑丙酸（ImP）在肥胖、脂肪组织功能障碍、胰岛素抵抗和代谢炎症中的作用及分子机制。",
+      "description": "关注肠道菌群来源咪唑丙酸在肥胖、脂肪组织功能障碍、胰岛素抵抗和代谢炎症中的作用及mTORC1、AMPK等分子机制。",
       "keywords": [
         "imidazole propionate",
         "imidazole propionic acid",
@@ -35,32 +117,12 @@
         "AMPK signaling",
         "histidine metabolism microbiome"
       ],
+      "exclude_keywords": [],
+      "europe_pmc_query": "(TITLE_ABS:\"imidazole propionate\" OR TITLE_ABS:\"imidazole propionic acid\") AND (TITLE_ABS:obesity OR TITLE_ABS:\"insulin resistance\" OR TITLE_ABS:adipose OR TITLE_ABS:metabolism)",
       "arxiv_categories": [
         "q-bio.BM",
         "q-bio.TO",
         "q-bio.MN"
-      ]
-    },
-    {
-      "id": "gut_microbiota_adipose_crosstalk",
-      "name": "肠道菌群与脂肪组织代谢互作",
-      "description": "关注肠道微生物代谢物与脂肪细胞分化、脂质代谢、产热、免疫微环境及肥胖表型之间的互作。",
-      "keywords": [
-        "gut microbiota adipose tissue",
-        "microbial metabolites adipocytes",
-        "adipogenesis obesity",
-        "adipose tissue inflammation",
-        "brown adipose thermogenesis",
-        "white adipose browning",
-        "lipid metabolism microbiome",
-        "metabolic endotoxemia",
-        "adipokines gut microbiome",
-        "host microbiome metabolism"
-      ],
-      "arxiv_categories": [
-        "q-bio.BM",
-        "q-bio.TO",
-        "q-bio.CB"
       ]
     }
   ]

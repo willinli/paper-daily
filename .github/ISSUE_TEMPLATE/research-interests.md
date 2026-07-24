@@ -1,144 +1,43 @@
 ---
 name: Research Interests
-about: Configure paper search topics
+about: 使用可视化页面生成或更新个性化文献检索配置
 title: Research Interests
 labels: config
 assignees: ''
 ---
 
+请先打开文献库中的“⚙ 设置”，在可视化页面增删研究方向和关键词。
+
+把页面生成的 JSON 粘贴到下面，并保持 Issue 标题为 `Research Interests`。
+
 ```json
 {
   "sources": [
+    { "type": "europe_pmc", "name": "PubMed · Europe PMC" },
+    { "type": "openalex", "name": "OpenAlex" },
+    { "type": "crossref", "name": "Crossref" },
     { "type": "arxiv", "name": "arXiv" }
   ],
   "conference_sources": {
-    "enabled": true,
+    "enabled": false,
     "include_default_venues": false,
-    "current_year": 2026,
-    "lookback_years": 2,
-    "venues": [
-      {
-        "id": "isca",
-        "name": "ISCA",
-        "enabled": true,
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/isca/isca{year}.bht"]
-      },
-      {
-        "id": "micro",
-        "name": "MICRO",
-        "enabled": true,
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/micro/micro{year}.bht"]
-      },
-      {
-        "id": "hpca",
-        "name": "HPCA",
-        "enabled": true,
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/hpca/hpca{year}.bht"]
-      },
-      {
-        "id": "asplos",
-        "name": "ASPLOS",
-        "enabled": true,
-        "group": "computer architecture",
-        "dblp_toc_patterns": [
-          "db/conf/asplos/asplos{year}-1.bht",
-          "db/conf/asplos/asplos{year}-2.bht",
-          "db/conf/asplos/asplos{year}-3.bht",
-          "db/conf/asplos/asplos{year}-4.bht"
-        ]
-      },
-      {
-        "id": "mlsys",
-        "name": "MLSys",
-        "enabled": true,
-        "group": "systems for machine learning",
-        "dblp_toc_patterns": ["db/conf/mlsys/mlsys{year}.bht"]
-      },
-      {
-        "id": "eurosys",
-        "name": "EuroSys",
-        "enabled": true,
-        "group": "systems",
-        "dblp_toc_patterns": ["db/conf/eurosys/eurosys{year}.bht"]
-      }
-    ]
+    "venues": []
   },
   "topics": [
     {
-      "id": "llm_low_precision_quantization",
-      "name": "大模型低精度量化",
-      "description": "关注大语言模型低比特量化、混合精度、量化感知训练、后训练量化、权重量化、激活量化、KV cache 量化以及量化对推理性能和精度的影响。",
+      "id": "glp1_obesity_pharmacotherapy",
+      "name": "GLP-1药物与肥胖治疗",
+      "description": "关注GLP-1受体激动剂及多靶点肠促胰素药物的减重疗效、安全性与代谢结局。",
       "keywords": [
-        "large language model quantization",
-        "LLM quantization",
-        "low-bit quantization",
-        "post-training quantization",
-        "weight-only quantization",
-        "activation quantization",
-        "mixed precision",
-        "FP8",
-        "INT4",
-        "INT8",
-        "KV cache quantization"
+        "GLP-1 receptor agonist",
+        "semaglutide obesity",
+        "tirzepatide obesity",
+        "liraglutide obesity",
+        "retatrutide obesity"
       ],
-      "arxiv_categories": ["cs.CL", "cs.LG", "cs.AI", "cs.DC"]
-    },
-    {
-      "id": "tensor_compute_unit_architecture",
-      "name": "张量计算单元结构",
-      "description": "关注 GPU/NPU/TPU 张量计算单元、矩阵乘加阵列、数据流架构、片上存储层次、低精度张量核、AI 加速器微架构和算子映射。",
-      "keywords": [
-        "tensor processing unit",
-        "tensor core",
-        "matrix multiply unit",
-        "systolic array",
-        "AI accelerator architecture",
-        "NPU architecture",
-        "GPU tensor core",
-        "low precision tensor compute",
-        "dataflow architecture",
-        "on-chip memory hierarchy"
-      ],
-      "arxiv_categories": ["cs.AR", "cs.DC", "cs.LG", "cs.PF"]
-    },
-    {
-      "id": "llm_inference_cluster_communication",
-      "name": "大模型推理集群通信优化",
-      "description": "关注分布式大模型推理、prefill/decode 分离、张量并行、流水并行、专家并行、跨节点通信、调度、负载均衡和 serving 系统吞吐延迟优化。",
-      "keywords": [
-        "LLM inference serving",
-        "distributed inference",
-        "inference cluster",
-        "tensor parallelism",
-        "pipeline parallelism",
-        "expert parallelism",
-        "all-reduce",
-        "collective communication",
-        "prefill decode disaggregation",
-        "serving scheduler"
-      ],
-      "arxiv_categories": ["cs.DC", "cs.PF", "cs.CL", "cs.LG"]
-    },
-    {
-      "id": "kvcache_compression_storage_scheduling",
-      "name": "KV cache 压缩与存储调度",
-      "description": "关注大模型推理中的 KV cache 压缩、淘汰、分页、卸载、预取、层级存储、显存管理和长上下文推理效率优化。",
-      "keywords": [
-        "KV cache compression",
-        "KV cache eviction",
-        "KV cache scheduling",
-        "paged attention",
-        "attention cache",
-        "long context inference",
-        "memory offloading",
-        "GPU memory management",
-        "cache prefetching",
-        "LLM serving memory"
-      ],
-      "arxiv_categories": ["cs.CL", "cs.LG", "cs.DC", "cs.PF"]
+      "exclude_keywords": ["type 1 diabetes"],
+      "europe_pmc_query": "(TITLE_ABS:\"GLP-1 receptor agonist\" OR TITLE_ABS:semaglutide OR TITLE_ABS:tirzepatide) AND (TITLE_ABS:obesity OR TITLE_ABS:\"weight loss\")",
+      "arxiv_categories": ["q-bio.BM", "q-bio.TO"]
     }
   ]
 }
